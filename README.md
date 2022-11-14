@@ -10,4 +10,3 @@ Demo API test script using postman and newman
 4. Go to the working directory and Run the following command
 
     newman run ./collection-file/api_test_postman_collection.json -e ./environment-file/api_test_postman_environment.json -r cli,htmlextra --reporter-htmlextra-export ./results/API_Test_Report_%DATE:~-4%-%DATE:~4,2%-%DATE:~7,2%_%TIME:~0,2%.%TIME:~3,2%.%TIME:~6,2%.html --insecure
-
