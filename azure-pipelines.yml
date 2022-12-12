@@ -1,93 +1,15 @@
-trigger:
-  branches:
-    include:
-    - master
+pool:
+  vmImage: ubuntu-latest
 
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '12.x'
+- script: |
+    curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+  displayName: 'Install Postman CLI'
 
-- task: Npm@1
-  displayName: 'NPM: Install Extension Dependencies'
+- task: CmdLine@2
+  displayName: 'Run automated API tests using Postman CLI'
   inputs:
-    workingDir: .
-    verbose: false
-
-- task: Npm@1
-  displayName: 'NPM: Build Extension'
-  inputs:
-    command: custom
-    workingDir: .
-    verbose: false
-    customCommand: 'run build'
-
-- task: Npm@1
-  displayName: 'NPM: Install Task Dependencies'
-  inputs:
-    workingDir: tasks/UploadPostmanHtmlReport
-    verbose: false
-
-- task: PackageAzureDevOpsExtension@2
-  displayName: 'TFX: Package Extension'
-  inputs:
-    rootFolder: .
-    publisherId: MaciejMaciejewski
-    extensionName: 'Postman Report'
-    extensionVisibility: public
-    extensionPricing: free
-    patternManifest: 'azure-devops-extension.json'
-  condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
-
-- task: PackageAzureDevOpsExtension@2
-  displayName: 'TFX: Package Extension Dev'
-  inputs:
-    rootFolder: .
-    publisherId: MaciejMaciejewski
-    extensionId: 'azure-pipelines-postman'
-    extensionTag: dev
-    extensionName: 'Postman Report Dev'
-    extensionVersion: '1.0.$(Build.BuildId)'
-    updateTasksVersion: true
-    extensionVisibility: private
-    extensionPricing: free
-    patternManifest: 'azure-devops-extension.json'
-  condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'master'))
-
-- task: PublishAzureDevOpsExtension@2
-  displayName: 'TFX: Publish Extension Dev'
-  inputs:
-    connectedServiceName: Marketplace
-    rootFolder: .
-    publisherId: MaciejMaciejewski
-    extensionId: 'azure-pipelines-postman'
-    extensionTag: dev
-    extensionName: 'Postman Report Dev'
-    extensionVersion: '1.0.$(Build.BuildId)'
-    extensionVisibility: private
-    extensionPricing: free
-    patternManifest: 'azure-devops-extension.json'
-  condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'master'))
-
-- task: ShareAzureDevOpsExtension@2
-  displayName: 'TFX: Share Extension'
-  inputs:
-    connectedServiceName: Marketplace
-    method: vsix
-    vsixFile: '**.vsix'
-    accounts: 'maciejmaciejewski-dev'
-  condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'master'))
-
-- task: CopyFiles@2
-  displayName: 'Copy Files'
-  inputs:
-    SourceFolder: '$(System.DefaultWorkingDirectory)'
-    Contents: '**.vsix'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/results'
-  condition: succeededOrFailed()
-
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact'
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/results'
-  condition: succeededOrFailed()
+    script: |
+        postman login --with-api-key PMAK-63977a9bc6822b1cad0714d7-f196bb52326b4f3459a14cbf2cc78913f3
+        # Run your collection using Postman CLI
+        postman collection run "5260842-34cc7875-b21d-474a-8d8f-48154d77672c" -e "5260842-6af82ab9-5541-46d7-8ee7-9f592f0ecb97"
